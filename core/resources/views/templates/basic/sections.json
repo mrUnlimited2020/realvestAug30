@@ -1,0 +1,263 @@
+{
+    "banner": {
+        "builder": true,
+        "no_selection": true,
+        "name": "Banner Section",
+        "content": {
+            "images":{
+                "image":{
+                    "size":"515x565"
+                }
+            },
+            "title": "text",
+            "heading": "text",
+            "button_text": "text",
+            "button_url": "text"
+        },
+        "element": {
+            "title": "text",
+            "count": "text",
+            "modal": true
+        }
+    },
+    "feature": {
+        "builder": true,
+        "name": "Feature Section",
+        "content": {
+            "title": "text",
+            "heading": "text"
+        },
+        "element": {
+            "title": "text",
+            "description": "textarea",
+            "feature_icon": "icon",
+            "modal": true
+        }
+    },
+    "about": {
+        "builder": true,
+        "name": "About Us",
+        "content": {
+            "images": {
+                "image": {
+                    "size": "545x635"
+                },
+                "group_image": {
+                    "size": "160x60"
+                }
+            },
+            "title": "text",
+            "heading": "text",
+            "subheading": "text",
+            "description": "textarea",
+            "button_text": "text",
+            "button_url": "text",
+            "top_card_title": "text",
+            "top_card_number": "text",
+            "bottom_card_title": "text",
+            "bottom_card_number": "text"
+        }
+    },
+    "latest_property": {
+        "builder": true,
+        "name": "Latest Property",
+        "content": {
+            "title": "text",
+            "heading": "text"
+        }
+    },
+    "cities": {
+        "builder": true,
+        "name": "Cities",
+        "content": {
+            "title": "text",
+            "heading": "text"
+        }
+    },
+    "testimonial": {
+        "builder": true,
+        "name": "Testimonial",
+        "content": {
+            "title": "text",
+            "heading": "text"
+        },
+        "element": {
+            "images": {
+                "image": {
+                    "size": "65x65"
+                }
+            },
+            "name": "text",
+            "address": "text",
+            "review": "textarea",
+            "modal": false
+        }
+    },
+    "brands": {
+        "builder": true,
+        "name": "Brand Section",
+        "no_selection": true,
+        "element": {
+            "images": {
+                "image": {
+                    "size": "180x35"
+                }
+            },
+            "modal": true
+        }
+    },
+    "featured_property": {
+        "builder": true,
+        "name": "Featured Property",
+        "content": {
+            "title": "text",
+            "heading": "text"
+        }
+    },
+    "blog": {
+        "builder": true,
+        "name": "Blog Section",
+        "content": {
+            "title": "text",
+            "heading": "text"
+        },
+        "element": {
+            "images": {
+                "image": {
+                    "size": "840x500",
+                    "thumb": "420x250"
+                }
+            },
+            "title": "text",
+            "description": "textarea-nic",
+            "modal": false
+        }
+    },
+    "subscribe": {
+        "builder": true,
+        "no_selection":true,
+        "name": "Subscribe Section",
+        "content": {
+            "heading": "text",
+            "subheading": "text"
+        }
+    },
+    "footer": {
+        "builder": true,
+        "no_selection": true,
+        "name": "Footer",
+        "content": {
+            "description": "textarea"
+        },
+        "element": {
+            "social_icon": "icon",
+            "social_link": "text",
+            "modal": true
+        }
+    },
+    "contact_us": {
+        "builder": true,
+        "no_selection": true,
+        "name": "Contact Us",
+        "content": {
+            "images": {
+                "image": {
+                    "size": "625x475"
+                }
+            },
+            "title": "text",
+            "heading": "text",
+            "address_icon": "icon",
+            "address_title": "text",
+            "address": "text",
+            "email_icon": "icon",
+            "email_title": "text",
+            "email": "text",
+            "mobile_icon": "icon",
+            "mobile_title": "text",
+            "mobile_number": "text"
+        }
+    },
+    "faq": {
+        "builder": true,
+        "name": "FAQ Section",
+        "content": {
+            "title": "text",
+            "heading": "text"
+        },
+        "element": {
+            "question": "text",
+            "answer": "textarea",
+            "modal": false
+        }
+    },
+    "breadcrumb": {
+        "builder": true,
+        "no_selection": true,
+        "name": "Breadcrumb",
+        "content": {
+            "images": {
+                "background_image": {
+                    "size": "1920x185"
+                }
+            }
+        }
+    },
+    "login": {
+        "builder": true,
+        "no_selection": true,
+        "name": "Login Section",
+        "content": {
+            "heading": "text"
+        }
+    },
+    "register": {
+        "builder": true,
+        "no_selection": true,
+        "name": "Register Section",
+        "content": {
+            "heading": "text"
+        }
+    },
+    "policy_pages": {
+        "builder": true,
+        "no_selection": true,
+        "name": "Policy Pages",
+        "element": {
+            "title": "text",
+            "details": "textarea-nic",
+            "modal": false
+        }
+    },
+    "kyc_instruction": {
+        "builder": true,
+        "no_selection": true,
+        "name": "KYC Instruction",
+        "content": {
+            "kyc_required_description": "textarea",
+            "kyc_pending_description": "textarea"
+        }
+    },
+    "referral":{
+        "builder":true,
+        "no_selection":true,
+        "name":"Referral Section",
+        "content":{
+            "title":"text",
+            "description":"textarea"
+        }
+    },
+    "banned":{
+        "builder":true,
+        "no_selection":true,
+        "name":"Banned Section",
+        "content":{
+            "images":{
+                "image":{
+                    "size":"700x400"
+                }
+            },
+            "heading":"text"
+        }
+    }
+}
