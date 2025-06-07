@@ -92,6 +92,10 @@
                             <button class="btn btn--base btn--sm" type="submit">@lang('Subscribe')</button>
                         </form>
                     </div>
+                    <a class="btn btn--base btn--sm mt-3" href="{{ route('user.logout') }}">
+                        <span class="icon"><i class="fas fa-sign-out-alt"></i></span>
+                        <span class="text">@lang('Logout')</span>
+                    </a>
                 </div>
             </div>
         </div>

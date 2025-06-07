@@ -5,6 +5,28 @@
             <form action="{{ route('user.withdraw.money') }}" method="post">
                 @csrf
 
+                <!-- Select Wallet -->
+                <div class="form-group">
+                    <label class="form--label">@lang('Select Wallet')</label>
+                    <select class="" name="wallet_type" required>
+                        <option data-title="@lang('Select One')" value="">
+                            @lang('Select One')
+                        </option>
+                        
+                        <option value="Foodmall Wallet">
+                            @lang('FoodMall Wallet')
+                        </option>
+                        
+                        <option value="Ref Commission Wallet">
+                            @lang('Ref Commission Wallet')
+                        </option>
+                        
+                        <option data-title="ROI Wallet" value="ROI Wallet">
+                            @lang('ROI Wallet')
+                        </option>
+                    </select>
+                </div>
+                
                 <div class="form-group">
                     <label class="form--label">@lang('Select Method')</label>
                     <select class="gateway-select-box" name="method_code" required>

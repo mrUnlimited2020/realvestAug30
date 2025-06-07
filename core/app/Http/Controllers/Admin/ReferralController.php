@@ -14,21 +14,23 @@ class ReferralController extends Controller
         $pageTitle       = 'Manage Referral';
         $referrals       = Referral::get();
         $commissionTypes = [
-            'deposit_commission' => 'Deposit Commission',
-            'profit_commission'  => 'Profit Commission',
-            'thrift_commission'  => 'Thrift Commission',
             'easyland_commission'  => 'Easyland Commission',
-            'regular_reg_commission'  => 'Regular Reg Commission',
-            'ass_mbmr_reg_commission'  => 'Ass Mbmr Reg Commission',
-            'ass_prtnr_reg_commission'  => 'Ass Prtnr Reg Commission',
+            'bronze_mbmr_reg_commission'  => 'Bronze Mbmr Reg Commission',
+            'silver_mbmr_reg_commission'  => 'Silver Mbmr Reg Commission',
+            'gold_mbmr_reg_commission'  => 'Gold Mbmr Reg Commission',
             'rentals_commission'  => 'Rentals Commission',
-            'ass_mbmr_rentals_commission'  => 'Ass Mbmr Rentals Commission',
-            'ass_prtnr_rentals_commission'  => 'Ass Prtnr Rentals Commission',
             'voucher_commission'  => 'Voucher Commission',
-            'ass_mbmr_voucher_commission'  => 'Ass Mbmr Voucher Commission',            
-            'ass_prtnr_voucher_commission'  => 'Ass Prtnr Voucher Commission',
-            'food_community_commission'  => 'Food_Community Commission',
-            'garri_commission'   => 'Garri Commission',
+            'bronze_sales_invest_comm' => 'Bronze Sales Invest',
+            'silver_sales_invest_comm' => 'Silver Sales Invest',
+            'gold_sales_invest_comm' => 'Gold Sales Invest',
+            'bronze_prtnr_fdreg_comm' => 'Bronze Prtnr FdComm',
+            'silver_prtnr_fdreg_comm' => 'Silver Prtnr FdComm',
+            'gold_prtnr_fdreg_comm' => 'Gold Prtnr FdComm',
+            'diamond_prtnr_fdreg_comm' => 'Diamond Prtnr FdComm',
+            'bronze_sales_comm' => 'Bronze Sales',
+            'silver_sales_comm' => 'Silver Sales',
+            'gold_sales_comm' => 'Gold Sales',
+            'diamond_sales_comm' => 'Diamond Sales',
         ];
         return view('admin.referral.index', compact('pageTitle', 'referrals', 'commissionTypes'));
     }
@@ -43,7 +45,7 @@ class ReferralController extends Controller
         $request->validate([
             'percent'         => 'required',
             'percent*'        => 'required|numeric',
-            'commission_type' => 'required|in:deposit_commission,regular_reg_commission,profit_commission,rentals_commission,voucher_commission,thrift_commission,easyland_commission,ass_mbmr_reg_commission,ass_prtnr_reg_commission,ass_mbmr_rentals_commission,ass_prtnr_rentals_commission,ass_mbmr_voucher_commission,ass_prtnr_voucher_commission,food_community_commission,garri_commission',
+            'commission_type' => 'required|in:bronze_mbmr_reg_commission,rentals_commission,voucher_commission,easyland_commission,silver_mbmr_reg_commission,gold_mbmr_reg_commission,bronze_sales_invest_comm,silver_sales_invest_comm,gold_sales_invest_comm,bronze_prtnr_fdreg_comm,silver_prtnr_fdreg_comm,gold_prtnr_fdreg_comm,diamond_prtnr_fdreg_comm,bronze_sales_comm,silver_sales_comm,gold_sales_comm,diamond_sales_comm',
         ]);
         $type = $request->commission_type;
 

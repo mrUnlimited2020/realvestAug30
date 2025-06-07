@@ -39,6 +39,12 @@ class User extends Authenticatable
     {
         return $this->hasMany(UserLogin::class);
     }
+    
+    //for refered_by details
+    public function referer()
+    {
+        return $this->belongsTo(User::class, 'ref_by', 'id');
+    }
 
     public function transactions()
     {

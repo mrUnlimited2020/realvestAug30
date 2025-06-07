@@ -131,17 +131,10 @@
                             <span class="list--group-desc">${curSymbol}${Number(invest.paid_amount).toFixed(2)}</span>
                         </li>
                         <li class="list-group-item d-flex justify-content-between align-items-center">
-                            <span class="list--group-text">@lang('Due Amount')</span>
-                            <span class="list--group-desc">${curSymbol}${Number(invest.due_amount).toFixed(2)}</span>
+                            <span class="list--group-text">@lang('Duration Before Withdrawal')</span>
+                            <span class="list--group-desc">${String(invest.invest_duration)}</span>
                         </li>
-                        <li class="list-group-item d-flex justify-content-between align-items-center">
-                            <span class="list--group-text">@lang('Per Installment Amount')</span>
-                            <span class="list--group-desc">${curSymbol}${Number(invest.per_installment_amount).toFixed(2)}</span>
-                        </li>
-                        <li class="list-group-item d-flex justify-content-between align-items-center">
-                            <span class="list--group-text">@lang('Next Installment Date')</span>
-                            <span class="list--group-desc">${invest.invest_status == 1 ?  formatTime(new Date(invest.installments[0].next_time)) : '<span class="badge badge--success">@lang('Completed')</span>'}</span>
-                        </li>
+                        
                         <li class="list-group-item d-flex justify-content-between align-items-center">
                             <span class="list--group-text">@lang('Total Profit')</span>
                             <span class="list--group-desc"><strong>${curSymbol}${Number(invest.total_profit).toFixed(2)}</strong></span>

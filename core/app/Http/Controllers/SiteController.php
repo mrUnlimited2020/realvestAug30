@@ -139,15 +139,19 @@ class SiteController extends Controller
     {
         $pageTitle  = 'Properties';
 
-        $excludedIds = [19, 20, 21, 22, 23, 24, 25, 26]; // List of IDs to exclude
+        //$excludedIds = [19, 20, 21, 22, 23, 24, 25, 26]; // List of IDs to exclude
+        $excludedFromId = 19; // Starting ID to exclude
         $properties = Property::active()
             ->searchable(['title'])
             ->filter(['location_id', 'is_capital_back'])
             ->withSum('invests', 'total_invest_amount')
             ->withCount('invests')
             ->with(['location', 'profitScheduleTime', 'installmentDuration', 'invests'])
-            ->whereNotIn('id', $excludedIds) // Exclude properties with the specified IDs
+            //->whereNotIn('id', $excludedIds) // Exclude properties with the specified IDs
+            ->where('id', '<', $excludedFromId) // Exclude properties with IDs greater than or equal to 
+            //->sortBy('per_share_amount');
             ->orderBy('per_share_amount'); // Sort by 'per_share_amount'
+            
 
         if ($request->invest_type) {
             $properties->where('invest_type', $request->invest_type);
@@ -180,15 +184,17 @@ class SiteController extends Controller
     {
         $pageTitle  = 'Welcome To Salesman Capital Mall';
         
-        $includedIds = [19, 20, 21, 22, 23, 24, 25, 26]; // List of IDs to include
+        //$includedIds = [19, 20, 21, 22, 23, 24, 25, 26]; // List of IDs to include
+        $includedFromId = 19; // Starting ID to include
         $properties = Property::active()
             ->searchable(['title'])
             ->filter(['location_id', 'is_capital_back'])
             ->withSum('invests', 'total_invest_amount')
             ->withCount('invests')
             ->with(['location', 'profitScheduleTime', 'installmentDuration', 'invests'])
-            ->whereIn('id', $includedIds) // Include only properties with these IDs
-            ->orderByDesc('id');
+            ->where('id', '>=', $includedFromId) // Include properties with IDs greater than or equal to $includedFromId
+            ->orderByDesc('id'); // Sort by ID in descending order
+
 
         if ($request->invest_type) {
             $properties->where('invest_type', $request->invest_type);

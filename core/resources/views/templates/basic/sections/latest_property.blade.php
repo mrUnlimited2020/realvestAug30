@@ -1,11 +1,13 @@
 @php
+    $includedFromId = 19; // Starting ID to include
+    $propertyContent  = getContent('latest_property.content', true);
     $latestProperties = App\Models\Property::active()
         ->withSum('invests', 'total_invest_amount')
         ->withCount('invests')
         ->with(['location', 'profitScheduleTime', 'installmentDuration', 'invests'])
+        ->where('id', '>=', $includedFromId) // Include properties with IDs greater than or equal to 
         ->orderByDesc('id')
-        ->take(8)
-        ->get();
+        ->get();    
 @endphp
 
 

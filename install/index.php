@@ -654,6 +654,5 @@ $sectionTitle =  empty($action) ? 'Terms of Use' : $action;
 		</div>
 	</footer>
 	<script src="../assets/global/js/bootstrap.bundle.min.js"></script>
-<!-- 	this is a comment -->
 </body>
 </html>

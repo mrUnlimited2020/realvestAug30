@@ -37,5 +37,17 @@ Route::controller('SiteController')->group(function () {
     Route::get('/{slug}', 'pages')->name('pages');
     Route::get('/', 'index')->name('home');
     Route::get('/user/fdcomdashboard', [UserController::class, 'fdComHome'])->name('user.fdcomdashboard');
-    
 });
+    
+    
+    // Route to display the conversion form
+    Route::get('/user/convert', [UserController::class, 'showConvertForm'])->name('user.convert');
+    // Route to handle form submission
+    Route::post('/user/convert', [UserController::class, 'trxConvert'])->name('user.convert.process');
+    
+    Route::get('/user/transfer', [UserController::class, 'showTransferForm'])->name('user.transfer');
+    Route::post('/user/transfer', [UserController::class, 'trxTransfer'])->name('user.transfer.process');
+    
+    // Transaction (Stockist Dashboard 1 and Stockist Dashboard 2)
+    Route::get('/user/goodsinstock', [UserController::class, 'goodsInStock'])->name('user.stockist1');
+    Route::get('/user/orderdetails', [UserController::class, 'orderDetails'])->name('user.stockist2');

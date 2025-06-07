@@ -25,19 +25,38 @@
         </div>
     @endif
     <div class="row gy-4 dashboard-widget-wrapper mb-4 justify-content-center">
+        <!--<div class="col-xl-4 col-lg-6 col-sm-6 ">-->
+        <!--    <div class="dashboard-widget flex-align">-->
+        <!--        <div class="dashboard-widget__icon flex-center">-->
+        <!--            <i class="fas fa-donate"></i>-->
+        <!--        </div>-->
+        <!--        <div class="dashboard-widget__content">-->
+        <!--            <span class="dashboard-widget__text">@lang('Bonus Balance')</span>-->
+        <!--            <h6 class="dashboard-widget__number">-->
+        <!--                {{ $general->cur_sym }}{{ showAmount(@$widget['balance']) }}-->
+        <!--            </h6>-->
+        <!--        </div>-->
+        <!--    </div>-->
+        <!--</div>-->
+        
+        <!-- Transaction Wallet -->
         <div class="col-xl-4 col-lg-6 col-sm-6 ">
-            <div class="dashboard-widget flex-align">
-                <div class="dashboard-widget__icon flex-center">
-                    <i class="fas fa-donate"></i>
-                </div>
-                <div class="dashboard-widget__content">
-                    <span class="dashboard-widget__text">@lang('Remaining Balance')</span>
+           <div class="dashboard-widget flex-align">
+               <div class="dashboard-widget__icon flex-center">
+                   <i class="fas fa-chart-bar"></i>
+               </div>
+               <div class="dashboard-widget__content">
+                   <span class="dashboard-widget__text">@lang('Transaction Wallet')</span>
+                   <!--<h6 class="dashboard-widget__number">-->
+                   <!--     {{ $general->cur_sym }}{{ @$widget['trx_wallet'] }}-->
+                   <!--</h6>-->
                     <h6 class="dashboard-widget__number">
-                        {{ $general->cur_sym }}{{ showAmount(@$widget['balance']) }}
-                    </h6>
-                </div>
-            </div>
+                         {{ $general->cur_sym }}{{ showAmount(@$widget['balance']) }}
+                   </h6>
+               </div>
+           </div>
         </div>
+
         <div class="col-xl-4 col-lg-6 col-sm-6 ">
             <div class="dashboard-widget flex-align">
                 <div class="dashboard-widget__icon flex-center">
@@ -146,7 +165,7 @@
                     <i class="fas fa-hand-holding-usd"></i>
                 </div>
                 <div class="dashboard-widget__content">
-                    <span class="dashboard-widget__text">@lang('Total Profit')</span>
+                    <span class="dashboard-widget__text">@lang('ROI Wallet')</span>
                     <h6 class="dashboard-widget__number">
                         {{ $general->cur_sym }}{{ showAmount(@$widget['total_profit']) }}
                     </h6>
@@ -179,11 +198,27 @@
                 </div>
             </div>
         </div>
+        
+        <!-- Direct Sales Volume Wallet -->
+        <!--<div class="col-xl-4 col-lg-6 col-sm-6 ">-->
+        <!--    <div class="dashboard-widget flex-align">-->
+        <!--        <div class="dashboard-widget__icon flex-center">-->
+        <!--            <i class="fas fa-chart-bar"></i>-->
+        <!--        </div>-->
+        <!--        <div class="dashboard-widget__content">-->
+        <!--            <span class="dashboard-widget__text">@lang('Direct Sales Volume')</span>-->
+        <!--            <h6 class="dashboard-widget__number">-->
+        <!--                 {{ @$widget['direct_sales_volume'] }}-->
+        <!--            </h6>-->
+        <!--        </div>-->
+        <!--    </div>-->
+        <!--</div>-->
+        
         <!-- Team Sales Volume Wallet -->
         <div class="col-xl-4 col-lg-6 col-sm-6 ">
             <div class="dashboard-widget flex-align">
                 <div class="dashboard-widget__icon flex-center">
-                    <i class="fas fa-bezier-curve"></i>
+                    <i class="fa fa-users"></i>
                 </div>
                 <div class="dashboard-widget__content">
                     <span class="dashboard-widget__text">@lang('Team Sales Volume')</span>
@@ -193,6 +228,21 @@
                 </div>
             </div>
         </div>
+        
+        <!-- Profit Sharing Token Wallet -->
+        <!--<div class="col-xl-4 col-lg-6 col-sm-6 ">-->
+        <!--    <div class="dashboard-widget flex-align">-->
+        <!--        <div class="dashboard-widget__icon flex-center">-->
+        <!--            <i class="fas fa-chart-pie"></i>-->
+        <!--        </div>-->
+        <!--        <div class="dashboard-widget__content">-->
+        <!--            <span class="dashboard-widget__text">@lang('Profit Token (P.T.)')</span>-->
+        <!--            <h6 class="dashboard-widget__number">-->
+        <!--                {{ $widget['profit_sharing_token'] }} <span class="dashboard-widget__text">@lang('units')</span>-->
+        <!--            </h6>-->
+        <!--        </div>-->
+        <!--    </div>-->
+        <!--</div>-->
         
         <div class="col-xl-4 col-lg-6 col-sm-6 ">
             <div class="dashboard-widget flex-align">

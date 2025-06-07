@@ -8,6 +8,7 @@ use App\Models\User;
 use App\Models\Invest;
 use App\Models\Profit;
 use App\Models\Deposit;
+use App\Models\Wallet;
 use App\Models\Referral;
 use App\Constants\Status;
 use App\Lib\FormProcessor;
@@ -18,6 +19,8 @@ use Illuminate\Http\Request;
 use App\Models\SupportTicket;
 use App\Lib\GoogleAuthenticator;
 use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Auth;
+
 
 class UserController extends Controller
 {
@@ -26,32 +29,100 @@ class UserController extends Controller
         $pageTitle                     = 'Dashboard';
         $user                          = auth()->user();
         $paidAmountSum                 = Invest::where('user_id', $user->id)->sum('paid_amount');
-        $registrationFeeSum            = Invest::where('user_id', $user->id)->sum('rglr_reg_fee');
+        $registrationFeeSum            = Invest::where('user_id', $user->id)->sum('bronze_mbmr_reg_fee');
         $totalAfterFees                = $paidAmountSum - $registrationFeeSum;
         $totalInvestments              = Invest::where('user_id', $user->id)->count();
+        $transactionWallet             = User::where('id', $user->id)->first()->balance;
         $userId                        = $user->id;
-        $propertyId                    = [3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18];
+        // Only recalculate if the wallet hasn't been updated recently
+        if (!$user->profit_wallet_last_updated) {
+            $user->profit_wallet = Invest::where('user_id', $user->id)
+                ->where('invest_status', Status::COMPLETED)
+                ->sum('total_profit');
+            $user->profit_wallet_last_updated = now(); // Set the timestamp
+            $user->save();
+        }
+        
+        //the starting ID is from 18 downwards
+        $propertyId                    = 18;
         $teamSalesVolume               = function($userId, $propertyId){
-            $directReferrals           = User::where('id', $userId)->pluck('id')->toArray();
+            $directReferrals           = User::where('ref_by', $userId)->pluck('id')->toArray(); 
 
             $secondLevelReferrals      = User::whereIn('ref_by', $directReferrals)->pluck('id')->toArray();
 
             $thirdLevelReferrals       = User::whereIn('ref_by', $secondLevelReferrals)->pluck('id')->toArray();
 
-            $allUserIds                = array_merge([$userId], $directReferrals, $secondLevelReferrals, $thirdLevelReferrals);
-            $totalAmount               = Invest::whereIn('user_id', $allUserIds)->whereIn('property_id', $propertyId)->sum('paid_amount');
+            $allUserIds                = array_merge($directReferrals, $secondLevelReferrals, $thirdLevelReferrals); //[$userId], removed due to it shows already for direct sales volume 
+
+            // Calculate the total amount for investments in properties with IDs lesser than or equal to $propertyId
+            $totalAmount               = Invest::whereIn('user_id', $allUserIds)
+                ->whereHas('property', function($query) use ($propertyId) {
+                    $query->where('id', '<=', $propertyId);
+                })
+                ->sum('paid_amount')*0.005;//note: this *0.005 was added to stepdown the amt
+            
+            // Return the total amount formatted to 2 decimal places
             $formattedAmount           = number_format($totalAmount, 2, '.', ',');
             return $formattedAmount;
         };
+
+        $formattedAmountTeam       = $teamSalesVolume($userId, $propertyId);
+        $totalAmountTeam           = floatval(str_replace(',', '', $formattedAmountTeam)); // Convert formattedAmountTeam to float for comparison
+
+        //Direct Sales volume
+        $directSalesVolume             = function($userId, $propertyId){
+            $totalAmount               = Invest::where('user_id', $userId)
+                ->whereHas('property', function($query) use ($propertyId) {
+                    $query->where('id', '<=', $propertyId);
+                })
+                ->sum('paid_amount');
+            $formattedAmount           = number_format($totalAmount, 2, '.', ',');
+            return $formattedAmount;
+        };
+
+        $formattedAmountDirect       = $directSalesVolume($userId, $propertyId);
+        $totalAmountDirect           = floatval(str_replace(',', '', $formattedAmountDirect)); // Convert formattedAmountDirect to float for comparison
+
+        // Define the DSV and TSV variables
+        $DSV = $totalAmountDirect;
+        $TSV = $totalAmountTeam;
+        $user = User::find($userId);
+
+        if ($user) {
+            $partnershipType = $user->partnership_type ?? 'Bsaic Member';
+            $PST = 0;
+            switch ($partnershipType) {
+                case 'Basic Member':
+                case 'Bronze Member':
+                    $PST = 0.002 * $DSV;
+                    break;
+                case 'Silver Member':
+                    $PST = 0.002 * $DSV + 0.001 * $TSV;
+                    break;
+                case 'Gold Member':
+                    $PST = 0.002 * $DSV + 0.002 * $TSV;
+                    break;
+                default:
+                    exit;
+            }
+            $pt = number_format($PST, 2);
+        }
+        else {
+            $pt =  '0.00'; 
+        }
+
+        $widget['profit_sharing_token']= $pt;
+        $widget['direct_sales_volume'] = $directSalesVolume($userId, $propertyId);
+        
         $widget['team_sales_volume']   = $teamSalesVolume($userId, $propertyId);
-        $widget['total_property']       = $totalInvestments;
+        $widget['total_property']      = $totalInvestments;
         $widget['balance']             = $user->balance;
+        $widget['trx_wallet']          = number_format($transactionWallet, 2); // 2 decimal places
         $widget['total_deposit']       = Deposit::where('user_id', $user->id)->where('status', Status::PAYMENT_SUCCESS)->sum('amount');
         $widget['total_withdraw']      = Withdrawal::where('user_id', $user->id)->where('status', Status::PAYMENT_SUCCESS)->sum('amount');
-        $widget['total_investment']    = $paidAmountSum;
-        $widget['total_profit']        = Invest::where('user_id', $user->id)->where('invest_status', Status::COMPLETED)->sum('total_profit');
+        $widget['total_profit']        = $user->profit_wallet;
         $widget['referral']            = User::where('ref_by', $user->id)->count();
-        $widget['referral_balance'] = $user->referral_balance;
+        $widget['referral_balance']    = $user->referral_balance;
         $widget['psq_invest']          = Invest::where('user_id', $user->id)->sum('psq_invest');
         $widget['thrift_invest']       = Invest::where('user_id', $user->id)->sum('thrift_invest');
         $widget['v_landlord_invest']   = Invest::where('user_id', $user->id)->sum('v_landlord_invest');
@@ -64,8 +135,8 @@ class UserController extends Controller
         })->where('status', Status::INSTALLMENT_PENDING)->orderBy('next_time')->with(['invest'])->first();
 
 
-        $trxReport['date'] = collect([]);
-        $investTrx         = Transaction::where('user_id', $user->id)
+        $trxReport['date']             = collect([]);
+        $investTrx                     = Transaction::where('user_id', $user->id)
             ->where(function ($query) {
                 $query->where('remark', 'down_payment')->orWhere('remark', 'installment');
             })
@@ -98,27 +169,36 @@ class UserController extends Controller
         $pageTitle                     = 'Mall Dashboard';
         $user                          = auth()->user();
         $paidAmountSum                 = Invest::where('user_id', $user->id)->sum('paid_amount');
-        $registrationFeeSum            = Invest::where('user_id', $user->id)->sum('rglr_reg_fee');
         $directSalesComm               = $user->direct_sales_comm;
         $referralsSalesComm            = $user->referrals_sales_comm;
-        $totalAfterFees                = $paidAmountSum - $registrationFeeSum;
         $totalInvestments              = Invest::where('user_id', $user->id)->count();
         $userId                        = $user->id;
-        $foodCommPropertyId            = 19;
-        $foodCommTeamSalesVolume       = function($userId, $foodCommPropertyId){
-            $directReferrals           = User::where('id', $userId)->pluck('id')->toArray();
+        
+        // Define the starting ID
+        $foodCommPropertyId = 19;
 
-            $secondLevelReferrals      = User::whereIn('ref_by', $directReferrals)->pluck('id')->toArray();
+        $foodCommTeamSalesVolume = function($userId, $foodCommPropertyId) {
+            $directReferrals = User::where('ref_by', $userId)->pluck('id')->toArray();
 
-            $thirdLevelReferrals       = User::whereIn('ref_by', $secondLevelReferrals)->pluck('id')->toArray();
+            $secondLevelReferrals = User::whereIn('ref_by', $directReferrals)->pluck('id')->toArray();
 
-            $allUserIds                = array_merge([$userId], $directReferrals, $secondLevelReferrals, $thirdLevelReferrals);
-            $totalAmountFoodComm       = Invest::whereIn('user_id', $allUserIds)->where('property_id', $foodCommPropertyId)->sum('paid_amount');
+            $thirdLevelReferrals = User::whereIn('ref_by', $secondLevelReferrals)->pluck('id')->toArray();
+
+            $allUserIds = array_merge($directReferrals, $secondLevelReferrals, $thirdLevelReferrals); //[$userId], removed due to it shows already for direct sales volume
+            
+            // Calculate the total amount for investments in properties with IDs greater than or equal to $foodCommPropertyId
+            $totalAmountFoodComm = Invest::whereIn('user_id', $allUserIds)
+                ->whereHas('property', function($query) use ($foodCommPropertyId) {
+                    $query->where('id', '>=', $foodCommPropertyId);
+                })
+                ->sum('paid_amount')*0.005; //note: this *0.005 was added to stepdown the amt
+            
+            // Return the total amount formatted to 2 decimal places
             return number_format($totalAmountFoodComm, 2, '.', '');
         };
         
-        $foodCommformattedAmount       = $foodCommTeamSalesVolume($userId, $foodCommPropertyId);
-        $totalAmountFoodComm           = floatval(str_replace(',', '', $foodCommformattedAmount)); // Convert foodCommformattedAmount to float for comparison
+        $foodCommformattedAmountTeam       = $foodCommTeamSalesVolume($userId, $foodCommPropertyId);
+        $totalAmountFoodCommTeam           = floatval(str_replace(',', '', $foodCommformattedAmountTeam)); // Convert foodCommformattedAmountTeam to float for comparison
         
         //This is for SCASH............
         // Define thresholds and corresponding profits
@@ -160,7 +240,7 @@ class UserController extends Controller
 
         // Determine the SCASH based on levels
         foreach ($levels as $level => $threshold) {
-            if ($totalAmountFoodComm >= $threshold) {
+            if ($totalAmountFoodCommTeam >= $threshold) {
                 $profit = $profits[$level];
                 $scash['total'] = $profit;
                 $scash['part1'] = $profit * 0.30 / 500;
@@ -168,11 +248,65 @@ class UserController extends Controller
             }
         };
         
+        $foodCommDirectSalesVolume     = function($userId, $foodCommPropertyId){
+            $totalAmountFoodComm               = Invest::where('user_id', $userId)
+                ->whereHas('property', function($query) use ($foodCommPropertyId) {
+                    $query->where('id', '>=', $foodCommPropertyId);
+                })
+                ->sum('paid_amount');
+            return number_format($totalAmountFoodComm, 2, '.', ',');
+        };
+        
+        
+        $foodCommformattedAmountDirect       = $foodCommDirectSalesVolume($userId, $foodCommPropertyId);
+        $totalAmountFoodCommDirect           = floatval(str_replace(',', '', $foodCommformattedAmountDirect)); // Convert foodCommformattedAmountDirect to float for comparison
+        
+        $DSV = $totalAmountFoodCommDirect;
+        $TSV = $totalAmountFoodCommTeam;
+        $user = User::find($userId);
+
+        if ($user) {
+            $partnershipType = $user->partnership_type ?? 'Bronze Member';
+
+            $PSTofDSV = 0;
+            $PSTofTSV = 0;
+            
+            switch ($partnershipType) {
+                case 'Basic Member':
+                    $PSTofDSV = 0.001 * $DSV;
+                    $PSTofTSV = 0.001 * $TSV;
+                    break;
+                case 'Bronze Member':
+                    $PSTofDSV = 0.001 * $DSV;
+                    $PSTofTSV = 0.001 * $TSV;
+                    break;
+                case 'Silver Member':
+                    $PSTofDSV = 0.002 * $DSV;
+                    $PSTofTSV = 0.002 * $TSV;                    
+                    break;
+                case 'Gold Member':
+                    $PSTofTSV = 0.003 * $TSV;                    
+                    $PSTofDSV = 0.003 * $DSV;
+                    break;
+                default:
+                    exit;
+            }
+            
+            $pt1 = number_format($PSTofDSV, 2);
+            $pt2 = number_format($PSTofTSV, 2);
+        }
+        else {
+            $pt1 = '0.00'; // Default value if $user is not defined
+            $pt2 = '0.00'; // Default value if $user is not defined
+
+        }
+
+        $widget['pst_of_dsv']          = $pt1;
+        $widget['pst_of_tsv']          = $pt2;
         $widget['total_property']      = $totalInvestments;
         $widget['balance']             = $user->balance;
         $widget['total_deposit']       = Deposit::where('user_id', $user->id)->where('status', Status::PAYMENT_SUCCESS)->sum('amount');
         $widget['total_withdraw']      = Withdrawal::where('user_id', $user->id)->where('status', Status::PAYMENT_SUCCESS)->sum('amount');
-        $widget['total_investment']    = $paidAmountSum;
         $widget['total_profit']        = Invest::where('user_id', $user->id)->where('invest_status', Status::COMPLETED)->sum('total_profit');
         $widget['referral']            = User::where('ref_by', $user->id)->count();
         $widget['direct_sales_comm']   = $directSalesComm;
@@ -181,6 +315,7 @@ class UserController extends Controller
         $widget['food_comm_team_sales_volume']   = $foodCommTeamSalesVolume($userId, $foodCommPropertyId);
         $widget['food_comm_user_scash']          = $scash['part1'];
         $widget['food_comm_coy_scash']           = $scash['part2'];
+        $widget['food_comm_direct_sales_volume']   = $foodCommDirectSalesVolume($userId, $foodCommPropertyId);
 
         $nextInstallment               = Installment::whereHas('invest', function ($invest) use ($user) {
             $invest->where('user_id', $user->id);
@@ -221,6 +356,143 @@ class UserController extends Controller
         $pageTitle = 'Deposit History';
         $deposits = auth()->user()->deposits()->searchable(['trx'])->with(['gateway'])->orderBy('id', 'desc')->paginate(getPaginate());
         return view($this->activeTemplate . 'user.deposit_history', compact('pageTitle', 'deposits'));
+    }
+
+    // Method to show the conversion form
+    public function showConvertForm()
+    {
+        $pageTitle = 'Convert Balance';
+        return view($this->activeTemplate . 'user.convert', compact('pageTitle'));
+    }
+    
+    public function trxConvert(Request $request){
+        $user = auth()->user();
+        $request->validate([
+            'amount' => 'numeric|min:0',
+        ]);
+
+        $amount = $request->input('amount');
+        
+        if ($user->balance < $amount) {
+            $notify[] = ['error', 'You have Insufficient balance'];
+            return redirect()->route('user.convert')->withNotify($notify);
+        }
+        
+        $user->balance -= $amount;
+        $user->balance += $amount;
+        $user->save();
+        $notify[] = ['success', 'Balance Converted Successfully!'];
+        
+        $trx = getTrx();
+        $transaction               = new Transaction();
+        $transaction->user_id      = $user->id;
+        $transaction->amount       = $amount;
+        $transaction->charge       = 0;
+        $transaction->post_balance = $user->balance;
+        $transaction->trx_type     = '-';
+        $transaction->trx          = $trx;
+        $transaction->remark       = 'balance conversion';
+        $transaction->details      = showAmount($amount) . ' converted from bonus balance to transaction wallet';
+        $transaction->save();
+        
+        return redirect()->route('user.home')->withNotify($notify);
+    }
+
+    public function showTransferForm(){
+        $pageTitle = 'Transfer Transaction Wallet';
+        return view($this->activeTemplate . 'user.transfer', compact('pageTitle'));    
+    }
+    
+    public function trxTransfer(Request $request){
+        $request->validate([
+            'username' => 'required|string|exists:users,username',
+            'amount' => 'required|numeric|min:0'
+        ]);
+
+        $user = auth()->user();
+        $recipient = User::where('username', $request->input('username'))->first(); // The recipient
+        $amount = $request->input('amount');
+        
+        // Check if the recipient is the same as the sender
+        if ($recipient->id == $user->id) {
+            $notify[] = ['error', 'Oga sir, You cannot transfer balance to yourself!'];
+            return back()->withNotify($notify);
+        }
+
+        if ($user->balance < $amount) {
+            $notify[] = ['error', 'Insufficient transaction wallet'];
+            return redirect()->route('user.transfer')->withNotify($notify);
+        }
+        // Deduct amount from sender
+        $user->balance -= $amount;
+        $user->save();
+
+        // Add amount to recipient
+        $recipient->balance += $amount;
+        $recipient->save();
+        
+        // transaction record for sender
+        $trx = getTrx(); // Function to generate a unique transaction ID
+        $transaction = new Transaction();
+        $transaction->user_id = $user->id;
+        $transaction->amount = $amount; 
+        $transaction->charge = 0;
+        $transaction->post_balance = $user->balance;
+        $transaction->trx_type = '-';
+        $transaction->trx = $trx;
+        $transaction->remark = 'Balance transfer to ' . $recipient->username;
+        $transaction->details = 'N' . showAmount($amount) . ' transferred to ' . $recipient->username;
+        $transaction->save();
+
+        // transaction record for recipient
+        $transaction = new Transaction();
+        $transaction->user_id = $recipient->id;
+        $transaction->amount = $amount; // Positive for credit
+        $transaction->charge = 0;
+        $transaction->post_balance = $recipient->balance;
+        $transaction->trx_type = '+';
+        $transaction->trx = $trx;
+        $transaction->remark = 'Balance transfer from ' . $user->username;
+        $transaction->details = 'N' . showAmount($amount) . ' received from ' . $user->username;
+        $transaction->save();
+        $notify[] = ['success', 'Transaction wallet Transfered Successfully!'];
+        return redirect()->route('user.home')->withNotify($notify);   
+    }
+    
+    //To organize Stockist dashboard
+    public function goodsInStock(){
+        $pageTitle = 'Goods In Stock';
+        // Get the list of referred users using Eloquent 
+        $referredUserIds = User::where('ref_by', Auth::id())
+            ->pluck('id'); 
+        
+        // Get investments for referred users and join with users table to get additional details
+        $orders = Invest::whereIn('user_id', $referredUserIds) 
+            ->join('users', 'invests.user_id', '=', 'users.id') 
+            ->select('invests.investment_id','invests.property_name', 'invests.total_invest_amount', 'invests.created_at', 'users.username as buyer_name') 
+            ->get();
+        return view($this->activeTemplate . 'user.goodsinstock', compact('pageTitle', 'orders'));    
+    }
+    public function orderDetails(Request $request){
+        $pageTitle = 'Order Details';
+        
+        // Get the list of referred users using Eloquent 
+        $referredUserIds = User::where('ref_by', Auth::id())
+            ->pluck('id'); 
+        
+        // Get investments for referred users and join with users table to get additional details
+        $orders = Invest::whereIn('user_id', $referredUserIds) 
+            ->join('users', 'invests.user_id', '=', 'users.id') 
+            ->join('properties', 'invests.property_id', '=', 'properties.id') // Join with properties table
+            ->select('invests.investment_id', 'invests.total_invest_amount', 'invests.created_at', 'users.username as buyer_name', 'properties.title as property_title')
+            ->with('method');
+            
+        if ($request->search) {
+            $orders = $orders->where('invests.investment_id', $request->search);
+        }
+        // Order and paginate the results 
+        $orders = $orders->orderBy('invests.id', 'desc')->paginate(getPaginate());
+        return view($this->activeTemplate . 'user.orderdetails', compact('pageTitle', 'orders'));    
     }
 
     public function show2faForm()

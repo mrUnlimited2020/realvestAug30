@@ -9,6 +9,7 @@
                             <thead>
                                 <tr>
                                     <th>@lang('User')</th>
+                                    <th>@lang('Refered By')</th>
                                     <th>@lang('Email-Phone')</th>
                                     <th>@lang('Country')</th>
                                     <th>@lang('Joined At')</th>
@@ -27,6 +28,18 @@
                                                     <span>@</span>{{ $user->username }}
                                                 </a>
                                             </span>
+                                        </td>
+                                        <td>
+                                            <span class="small">
+                                                 @if($user->referer)
+                                                    <a href="{{ route('admin.users.detail', $user->referer->id) }}">
+                                                        {{ $user->referer->fullname }}
+                                                    </a>
+                                                @else
+                                                    <span class="text-muted">No Referer</span>
+                                                @endif
+                                            </span>
+                                            
                                         </td>
                                         <td>{{ $user->email }}<br>{{ $user->mobile }}</td>
                                         <td>
