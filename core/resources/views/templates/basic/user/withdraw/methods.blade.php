@@ -13,6 +13,10 @@
                             @lang('Select One')
                         </option>
                         
+                        <option value="Main Wallet">
+                            @lang('Main Wallet')
+                        </option>
+                        
                         <option value="Foodmall Wallet">
                             @lang('FoodMall Wallet')
                         </option>

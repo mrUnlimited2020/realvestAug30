@@ -26,7 +26,7 @@ class WithdrawController extends Controller
         $this->validate($request, [
             'method_code' => 'required',
             'amount' => 'required|numeric',
-            'wallet_type' => 'required|in:Ref Commission Wallet,Foodmall Wallet,ROI Wallet,Main Wallet' // Validate dropdown option
+            'wallet_type' => 'required|in:Ref Commission Wallet,Foodmall Wallet,ROI Wallet' // Validate dropdown option
         ]);
 
         $method = WithdrawMethod::where('id', $request->method_code)->where('status', Status::ENABLE)->firstOrFail();
@@ -35,25 +35,8 @@ class WithdrawController extends Controller
 
         if ($walletType === 'Foodmall Wallet') {
             $user->balance = $user->direct_sales_comm + $user->referrals_sales_comm;
-            $foodmallBalance = $user->direct_sales_comm + $user->referrals_sales_comm;
-            if ($request->amount > $foodmallBalance) {
-                $notify[] = ['error', 'Insufficient Foodmall Wallet balance.'];
-                return back()->withNotify($notify);
-            }
         } elseif ($walletType === 'Ref Commission Wallet') {
             $user->balance = $user->referral_balance;
-            if ($request->amount > $user->referral_balance) {
-                $notify[] = ['error', 'Insufficient Ref Commission Wallet balance.'];
-                return back()->withNotify($notify);
-            }
-
-        } elseif ($walletType === 'Main Wallet') {
-            $user->balance;
-            if ($request->amount > $user->balance) {
-                $notify[] = ['error', 'Insufficient Main Wallet.'];
-                return back()->withNotify($notify);
-            }
-    
         } elseif ($walletType === 'ROI Wallet') {
             $currentDate = now();
             $investments = Invest::where('user_id', $user->id)->where('invest_status', Status::COMPLETED)->get();
@@ -84,11 +67,6 @@ class WithdrawController extends Controller
             if (!empty($ineligibleInvestments)) {
                 \Log::info("Ineligible Investments: " . implode(', ', $ineligibleInvestments));
             }
-            if ($request->amount > $totalEligibleProfit) {
-                $notify[] = ['error', 'Insufficient ROI Wallet balance.'];
-                return back()->withNotify($notify);
-            }
-    
         }
 
         if ($request->amount < $method->min_limit) {
@@ -157,15 +135,21 @@ class WithdrawController extends Controller
         $walletType = session()->get('wallet_type');
 
         if ($walletType === 'ROI Wallet') {
+            if ($withdraw->amount > $user->profit_wallet) {
+                $notify[] = ['error', 'Insufficient ROI Wallet balance.'];
+                return back()->withNotify($notify);
+            }
+            
             $user->profit_wallet -= $withdraw->amount;
             $user->profit_wallet_last_updated = now(); // Set the timestamp
             $user->save();
 
         } elseif ($walletType === 'Ref Commission Wallet') {
+            if ($withdraw->amount > $user->referral_balance) {
+                $notify[] = ['error', 'Insufficient Ref Commission Wallet balance.'];
+                return back()->withNotify($notify);
+            }
             $user->referral_balance -= $withdraw->amount;
-
-        } elseif ($walletType === 'Main Wallet') {
-            $user->balance -= $withdraw->amount;
 
         } elseif ($walletType === 'Foodmall Wallet') {
             $foodmallBalance = $user->direct_sales_comm + $user->referrals_sales_comm;
@@ -190,7 +174,6 @@ class WithdrawController extends Controller
 
         $withdraw->status = Status::PAYMENT_PENDING;
         $withdraw->withdraw_information = $userData;
-        $withdraw->wallet_type = $walletType;
         $withdraw->save();
         $user->save();
 

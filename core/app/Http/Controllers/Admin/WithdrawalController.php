@@ -124,7 +124,27 @@ class WithdrawalController extends Controller
         $withdraw->save();
 
         $user = $withdraw->user;
-        $user->balance += $withdraw->amount;
+        $walletType = $withdraw->wallet_type;
+
+        if ($walletType === 'ROI Wallet') {
+            $user->profit_wallet += $withdraw->amount;
+    
+        } elseif ($walletType === 'Ref Commission Wallet') {
+            $user->referral_balance += $withdraw->amount;
+    
+        } elseif ($walletType === 'Main Wallet') {
+            $user->balance += $withdraw->amount;
+    
+        } elseif ($walletType === 'Foodmall Wallet') {
+            if ($user->referrals_sales_comm > 0) {
+                $user->referrals_sales_comm += $withdraw->amount;
+            } else {
+                $user->direct_sales_comm += $withdraw->amount;
+            }        
+        } else {
+            $notify[] = ['error', 'Invalid wallet type used for this withdrawal.'];
+            return back()->withNotify($notify);
+        }
         $user->save();
 
         $transaction = new Transaction();
